@@ -1,19 +1,52 @@
 # Submission
 
 ## Build
+Builds under QtCreator
 
 ## Run
+From the command line run `HistogramTool <image_file>`
 
-From the command line run HistogramTool
- --image=<imagefilename> Load the image from this file. PNG or JPG supported
- --output=<outputfilename> Name of file to write to
- --check  If this is set, a checksum will be produced for each (RGB) plane and compared to the total pixel count
+Other command line options include:
 
+	Options
+	 -h, --help                   Displays this help.
+	 -s, --self-test              Show self test results
+	 -o, --output-file <file>     Write output to file
+	 -t, --num-threads <threads>  Use specified number of threads. Overrides automatic setting
+
+	Arguments:
+	  image                        Image file to compute histogram for.
 
 ## Tests
-From the command line run TestHistogramTool
+From the command line run `TestHistogramTool`
 
 Test runs unit tests against the underlying histogram and tool classes.
+
+## Performance
+Performance was tested on two machines.  The tool was run 5 times and timings were averaged over runs then rounded to nearest ms.
+
+### Machine 1
+MacBook Pro 15" mid 2015
+2.8 GHz Intel Core i7
+16 GB Memory
+macos Sierra 10.12.5
+
+	+------------+--------+--------+--------+--------+--------+--------+--------+--------+
+	| Threads    |   1    |   2    |   3    |   4    |   5    |   6    |   7    |   8    |
+	+------------+--------+--------+--------+--------+--------+--------+--------+--------+
+	| Time Taken | 140 ms |  72 ms |  49 ms |  36 ms |  39 ms |  39 ms |  38 ms |  37 ms |
+	+------------+--------+--------+--------+--------+--------+--------+--------+--------+
+
+	+------------+--------+--------+
+	| Threads    |   10   |  100   |
+	+------------+--------+--------+
+	| Time Taken |  38 ms |  37 ms |
+	+------------+--------+--------+
+
+When the number of threads is not specified, the OS reports 8 available cores.
+
+### Machine 2
+PC, Ubuntu  Pro 15" mid 2015 with 2.8 GHz Intel Core i7 against the test image.
 
 
 # Requirements

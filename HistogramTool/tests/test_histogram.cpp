@@ -107,5 +107,20 @@ void TestHistogram::resetBuckets() {
     }
 }
 
+// When bucket out of range is requested, thows a std::invalid_argument
+void TestHistogram::requestInvalidBucket( ) {
+    Histogram h{10};
+
+    QVERIFY_EXCEPTION_THROWN( h[10], std::invalid_argument);
+}
+
+// When bucket out of range is incremented, thows a std::invalid_argument
+void TestHistogram::incrementInvalidBucket( ) {
+    Histogram h{10};
+
+    QVERIFY_EXCEPTION_THROWN( h.increment(10), std::invalid_argument);
+}
+
+
 QTEST_MAIN(TestHistogram)
 //#include "tst_testhistogram.moc"

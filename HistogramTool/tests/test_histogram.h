@@ -30,4 +30,10 @@ private slots:
 
     // When a histogram is reset, values revert to zero
     void resetBuckets();
+
+    // When bucket out of range is requested, thows a std::invalid_argument
+    void requestInvalidBucket( );
+
+    // When bucket out of range is incremented, thows a std::invalid_argument
+    void incrementInvalidBucket( );
 };

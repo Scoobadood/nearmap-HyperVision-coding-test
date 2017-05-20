@@ -1,102 +1,105 @@
 #include "histogram_tool.h"
 
 #include <thread>
+#include <sstream>
 
-/*
- * Given an array of pointers to histogram buckets, sum the results into
- * the built in buckets
+/**
+ * Build a HistogramTool configured to use the given number of threads.
+ * @param numThreads The number of threads to use to compute the histogram.
+ * The input image data is divided into blocks and each thread handles a block
+ * So long as there are multiple cores, each thread will run on its own core.
  */
-void HistogramTool::mergeBuckets( std::vector<std::shared_ptr<Histogram>>& redBuckets,
-                                  std::vector<std::shared_ptr<Histogram>>& greenBuckets,
-                                  std::vector<std::shared_ptr<Histogram>>& blueBuckets ) {
-    // Clear before we start
-    mRedCount.reset( );
-    for( auto h : redBuckets ) {
-        mRedCount += *h;
-    }
-
-    mGreenCount.reset( );
-    for( auto h : greenBuckets ) {
-        mGreenCount += *h;
-    }
-
-    mBlueCount.reset( );
-    for( auto h : blueBuckets ) {
-        mBlueCount += *h;
-    }
-}
-
-/*
- * Construct one
- * @param threadsToUse the number of threads to use to compute the
- * histogram. Each thread handles a block of input pixels. So long as there
- * are multiple cores, each thread will run on its own core.
- */
-HistogramTool::HistogramTool( uint32_t threadsToUse ) {
-    mThreadsToUse = threadsToUse;
+HistogramTool::HistogramTool( uint32_t numThreads) {
+    mNumThreads = numThreads;
 }
 
 
-/*
- * Reset the histogram buckets
+/**
+ * Compute the histogram for a given block of pixels within the image.
+ * @param imageData The entire image data.
+ * @param firstPixel The offset of the first pixel in the block to consider.
+ * @param lastPixel The offset of the last pixel in the block to consider.
+ * @param red Histogram into which red values will be stored.
+ * @param green Histogram into whihc green values will be stored.
+ * @param blue Histogram into whihc blue values will be stored.
  */
-void HistogramTool::reset( ) {
-    mRedCount.reset();
-    mGreenCount.reset();
-    mBlueCount.reset();
-}
+void HistogramTool::computePartialHistogram( const QRgb * const imageData, uint32_t firstPixel, uint32_t lastPixel, Histogram& red, Histogram& green, Histogram& blue ) {
 
-/*
- * Compute the histogram for a given pixel block
- */
-void HistogramTool::computeHistogram( const QRgb * const imageData, uint32_t firstPixel, uint32_t lastPixel,
-                                      std::shared_ptr<Histogram> red,
-                                      std::shared_ptr<Histogram> green,
-                                      std::shared_ptr<Histogram> blue ) {
     for( uint32_t i=firstPixel; i<=lastPixel; i++ ) {
         QRgb rgb = imageData[i];
 
-        red->increment(   static_cast<size_t>( qRed(rgb) ) );
-        green->increment( static_cast<size_t>( qGreen(rgb) ) );
-        blue->increment(  static_cast<size_t>( qBlue(rgb) ) );
+        red.increment(   static_cast<size_t>( qRed(rgb) ) );
+        green.increment( static_cast<size_t>( qGreen(rgb) ) );
+        blue.increment(  static_cast<size_t>( qBlue(rgb) ) );
     }
 }
 
-/*
- * Compute the histogram for the given image and store outputs in the given red, green and blue buckets
+
+/**
+ * Compute the histogram for the given image.
+ * The image is split into multiple blocks and each block is processed by a different thread.
+ * Each thread uses its own Histogram and all Histograms are then merged into a single
+ * Histogram once all threads have finished executing.
+ * @param image The image. Expected to be RGB data.
+ * @param red The overall Histogram of red values in the image.
+ * @param green The overall Histogram of green values in the image.
+ * @param blue The overall Histogram of blue values in the image.
  */
-void HistogramTool::computeHistogram( const QImage& image ) {
+void HistogramTool::computeHistogram( const QImage& image, Histogram& red, Histogram& green, Histogram& blue) {
 
-    const QRgb* imageData = reinterpret_cast<const QRgb*> ( image.constBits() );
+    // Work out how many blocks to carve this into
+    uint32_t numPixels = static_cast<uint32_t>( image.width() * image.height() );
+    uint32_t blockSize = numPixels / mNumThreads;
 
-    // Naive, single threaded code
-    uint32_t num_pixels = static_cast<uint32_t>( image.width() * image.height() );
+    // Get reference to data
+    const QRgb* const imageData = reinterpret_cast<const QRgb * const> ( image.constBits() );
 
-    reset();
+    // Allocate Histogram storage per thread
+    Histogram *redHistograms = new Histogram[ mNumThreads];
+    Histogram *greenHistograms = new Histogram[ mNumThreads];
+    Histogram *blueHistograms = new Histogram[ mNumThreads];
 
-    uint32_t pixel_block_size = num_pixels / mThreadsToUse;
+    // Launch a thread per block
+    std::thread*  threads = new std::thread[ mNumThreads ];
 
+    uint32_t firstPixel = 0;
 
-    std::vector<std::shared_ptr<Histogram>> redBuckets, greenBuckets, blueBuckets;
+    for( uint32_t tIndex=0; tIndex<mNumThreads; tIndex++ ) {
+        uint32_t lastPixel = firstPixel + blockSize - 1;
 
+        // Fix for final block in case image cannot be neatly divided into equal blocks
+        if( tIndex == mNumThreads - 1 ) {
+            lastPixel = numPixels - 1;
+        }
 
-    for( uint32_t tIndex=0; tIndex<mThreadsToUse; ++tIndex ) {
-        auto red = std::make_shared<Histogram>();
-        auto green= std::make_shared<Histogram>();
-        auto blue= std::make_shared<Histogram>();
+        Histogram& r = redHistograms[tIndex];
+        Histogram& g = greenHistograms[tIndex];
+        Histogram& b = blueHistograms[tIndex];
 
-        uint32_t firstPixel = tIndex * pixel_block_size;
-        uint32_t lastPixel = firstPixel + pixel_block_size - 1;
+        // Kick off a new thread. Capture pixel indices and 'this' by copying, r, g and b by reference
+        threads[tIndex] = std::thread{ [firstPixel, lastPixel, this, &imageData, &r, &g, &b]{ computePartialHistogram(imageData, firstPixel, lastPixel, r, g, b); } };
 
-        std::thread t{ [&]{ this->computeHistogram( imageData, firstPixel, lastPixel, red, green, blue); } };
-
-        redBuckets.push_back( red );
-        greenBuckets.push_back( green );
-        blueBuckets.push_back( blue );
-
-        t.join();
+        // Next block
+        firstPixel += blockSize;
     }
 
-    // Done
-    mergeBuckets( redBuckets, greenBuckets, blueBuckets);
+    // Wait for all threads to finish execution
+    for( uint32_t tIndex=0; tIndex<mNumThreads; ++tIndex ) {
+        threads[tIndex].join();
+    }
+
+    // Merge all outputs into provided Histograms
+    for( uint32_t tIndex = 0; tIndex< mNumThreads; tIndex++ ) {
+
+        red += redHistograms[tIndex];
+        green += greenHistograms[tIndex];
+        blue += blueHistograms[tIndex];
+    }
+
+
+    // And free memory
+    delete[] redHistograms;
+    delete[] greenHistograms;
+    delete[] blueHistograms;
+    delete[] threads;
 }
