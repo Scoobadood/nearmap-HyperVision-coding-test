@@ -11,20 +11,20 @@ Based on Qt 5.8.0 (GCC 5.3.1 20160406 (Red Hat 5.3.1-6), 64 bit)
 From revision 991f5eb6a5
 Requires c++ 11
 
-+-- app
-|   +-- main.cpp                             Main application entry point
-|
-+-- src
-|   |-- histogram.cpp                        Class representing a histogram
-|   |-- histogram.h
-|   |-- histogram_tool.cpp                   Class representing the Histogram computation tool
-|   +-- histogram_tool.h
-|
-+-- tests
-    |-- test_histogram.cpp                   Unit tests for Histogram class
-    |-- test_histogram.h
-    |-- test_histogram_tool.cpp              Unit tests for HistogramTool class
-    +-- test_histogram_tool.h
+	+-- app
+	|   +-- main.cpp                             Main application entry point
+	|
+	+-- src
+	|   |-- histogram.cpp                        Class representing a histogram
+	|   |-- histogram.h
+	|   |-- histogram_tool.cpp                   Class representing the Histogram computation tool
+	|   +-- histogram_tool.h
+	|
+	+-- tests
+	    |-- test_histogram.cpp                   Unit tests for Histogram class
+	    |-- test_histogram.h
+	    |-- test_histogram_tool.cpp              Unit tests for HistogramTool class
+	    +-- test_histogram_tool.h
 
 
 
