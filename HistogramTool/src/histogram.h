@@ -2,6 +2,7 @@
 #define HISTOGRAM_H
 
 #include <iostream>
+#include <cstdint>
 #include <QImage>
 
 /**

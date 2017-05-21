@@ -1,7 +1,32 @@
 # Submission
+This is my submission for the nearmap coding project.  I'm unfamiliar with the Qt framework but to avoid including
+lots of extra image processing I have tried to use the Qt stuff where it makes sense - mostly to parse arguments, time
+execution and read the image as well as for unit tests because it seemed to work better that way.
 
-## Build
-Builds under QtCreator
+I've used std::thread because I understand it better. This means it needs to be compiled with C++ 11 support.
+
+## Code Structure and Build
+Builds using QtCreator 4.2.2  and GCC 64 bit 
+Based on Qt 5.8.0 (GCC 5.3.1 20160406 (Red Hat 5.3.1-6), 64 bit)
+From revision 991f5eb6a5
+Requires c++ 11
+
++-- app
+|   +-- main.cpp                             Main application entry point
+|
++-- src
+|   |-- histogram.cpp                        Class representing a histogram
+|   |-- histogram.h
+|   |-- histogram_tool.cpp                   Class representing the Histogram computation tool
+|   +-- histogram_tool.h
+|
++-- tests
+    |-- test_histogram.cpp                   Unit tests for Histogram class
+    |-- test_histogram.h
+    |-- test_histogram_tool.cpp              Unit tests for HistogramTool class
+    +-- test_histogram_tool.h
+
+
 
 ## Run
 From the command line run `HistogramTool <image_file>`
@@ -43,39 +68,36 @@ macos Sierra 10.12.5
 	| Time Taken |  38 ms |  37 ms |
 	+------------+--------+--------+
 
-When the number of threads is not specified, the OS reports 8 available cores.
+When the number of threads is not specified, the OS reports 8 available cores however the i7 has only 4 cores.
 
 ### Machine 2
-PC, Ubuntu  Pro 15" mid 2015 with 2.8 GHz Intel Core i7 against the test image.
+PC Home build,
+Intel® Pentium(R) CPU G4400 @ 3.30GHz × 2,
+4 GB Memory
+Ubuntu 16.04 LTS
 
+	+------------+--------+--------+--------+--------+
+	| Threads    |   1    |   2    |   3    |   4    |
+	+------------+--------+--------+--------+--------+
+	| Time Taken | 150 ms |  80 ms |  81 ms |  79 ms |
+	+------------+--------+--------+--------+--------+
 
-# Requirements
+	+------------+--------+--------+
+	| Threads    |   10   |  100   |
+	+------------+--------+--------+
+	| Time Taken |  78 ms |  78 ms |
+	+------------+--------+--------+
 
-## Constraints
+## Comments
+### Inconsistent results
+On macos, the output from the histogram tool is very slightly different from that on Ubuntu.  
+I've cross-checked with output from Matlab (on both macos and Ubuntu) and find that Matlab on OSX, Matlab on Linux and my tool on Linux all agree on the values. My tool on OSX disagrees by at worst 
 
-* Must be written in C++
-* Recommended to build and run on Linux (Ubuntu).
-* Recommended to use the Qt SDK (http://qt-project.org/downloads).  Stub project provided.
+From loading the JPEG into Photoshop, it seems that it includes its own colour table.  It may be that the macos implementation of QImage is performing some colour mapping on the underlying image as it's loaded.
 
-## Task
+### Improving performance
+Profiling shows that the bulk of the time the application spends in Histogram::increment().  
 
-* Create a command line tool that can calculate a red, green and blue histogram for an image and write to an output file in the format described below.
-  * It should be optimized for performance (e.g. multi-threaded) and should ultilize all processing cores.
-   (Please **don't** use third-party libraries such as Intel TBB or OpenMP.)
-* Create a unit test to validate the results.  To simplify the build process it is sufficient to include the test case in the command line tool.
+A quick test shows that dropping the bounds check result in a 30ms improvement in performance on Linux with a 2 thread run taking 48ms. This is significant.
 
-## Output format
-
-An ascii text file containing one line for each colour band in the image (in the order red, green, blue).  Each line is a comma separated list of the pixel count for each value (256 per line).
-
-## Submission instructions
-
-* A zip file containing the following - submitted to your agent or nearmap contact.
-  * Full source code and project files required to build.  It should compile with no errors or warnings.
-  * The output histogram file for the provided sample image.
-  * DO NOT include any build intermediate files in the zip file.
-  * DO NOT include the provided sample image in the zip file.
-
-* DO NOT send pull requests against this repository for two reasons:
-  * We don't want executables checked into source control
-  * We don't want other candidates to see your solution.
+I suspect that performance could be greatly increased by swapping out the Histogram class entirely and using simple arrays of uint32_ts at the cost of slightly more opaque/less maintainable code.
