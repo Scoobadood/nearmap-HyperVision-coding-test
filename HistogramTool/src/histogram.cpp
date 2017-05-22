@@ -61,6 +61,7 @@ uint32_t Histogram::operator[]( size_t index) const
  */
 void Histogram::increment( size_t index )
 {
+    // TODO: Remove this test for performance increase. See README.md
     if( index >= mNumBuckets) {
         throw std::invalid_argument( "Bucket index out of range" );
     }

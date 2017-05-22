@@ -145,6 +145,11 @@ int main(int argc, char *argv[])
     }
 
     //
+    // Convert image to ARGB32 format for consistency
+    //
+    img = img.convertToFormat(QImage::Format_ARGB32);
+
+    //
     // If numThreads is not been specified, ask how many cores there are
     // and use that value.
     //

@@ -1,15 +1,8 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2012-09-03T20:39:27
-#
-#-------------------------------------------------
+TEMPLATE = subdirs
 
-QT       += testlib
+SUBDIRS += src tests app
+CONFIG += ordered
+CONFIG += c++11
 
-TARGET = histogramTool
-CONFIG   += console
-CONFIG   -= app_bundle
-
-TEMPLATE = app
-
-SOURCES += main.cpp
+tests.depends = src
+app.depends = tests

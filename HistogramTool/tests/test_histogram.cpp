@@ -120,7 +120,3 @@ void TestHistogram::incrementInvalidBucket( ) {
 
     QVERIFY_EXCEPTION_THROWN( h.increment(10), std::invalid_argument);
 }
-
-
-QTEST_MAIN(TestHistogram)
-//#include "tst_testhistogram.moc"

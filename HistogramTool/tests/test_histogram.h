@@ -1,3 +1,6 @@
+#ifndef TEST_HISTOGRAM_H
+#define TEST_HISTOGRAM_H
+
 #include "../src/histogram.h"
 
 class TestHistogram : public QObject {
@@ -37,3 +40,5 @@ private slots:
     // When bucket out of range is incremented, thows a std::invalid_argument
     void incrementInvalidBucket( );
 };
+
+#endif

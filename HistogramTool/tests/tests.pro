@@ -4,7 +4,8 @@ TEMPLATE = app
 
 SOURCES += \
     test_histogram.cpp \
-    test_histogram_tool.cpp
+    test_histogram_tool.cpp \
+    test_main.cpp
 
 HEADERS += \
     test_histogram.h \
