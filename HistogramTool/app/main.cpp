@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
             numberOfCores = 1;
         }
         else {
-            cout << "Detected " << numberOfCores << endl;
+            cout << "Detected " << numberOfCores << " cores." << endl;
         }
         numThreads = numberOfCores;
     }
