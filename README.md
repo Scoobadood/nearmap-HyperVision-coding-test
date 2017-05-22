@@ -89,12 +89,6 @@ Ubuntu 16.04 LTS
 	+------------+--------+--------+
 
 ## Comments
-### Inconsistent results
-On macos, the output from the histogram tool is very slightly different from that on Ubuntu.  
-I've cross-checked with output from Matlab (on both macos and Ubuntu) and find that Matlab on OSX, Matlab on Linux and my tool on Linux all agree on the values. My tool on OSX disagrees by at worst 
-
-From loading the JPEG into Photoshop, it seems that it includes its own colour table.  It may be that the macos implementation of QImage is performing some colour mapping on the underlying image as it's loaded.
-
 ### Improving performance
 Profiling shows that the bulk of the time the application spends in Histogram::increment().  
 
